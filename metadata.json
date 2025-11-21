@@ -1,0 +1,5 @@
+{
+  "name": "PDFCompiler AI",
+  "description": "Compilez et analysez plusieurs documents PDF. Générez un rapport unique avec un tableau récapitulatif intelligent via Gemini.",
+  "requestFramePermissions": []
+}
