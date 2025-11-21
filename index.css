@@ -1,9 +1,6 @@
-/* Les directives @tailwind sont commentées pour éviter les erreurs dans les environnements sans build PostCSS.
-   Le CDN Tailwind dans index.html gère les classes utilitaires. 
-*/
-/* @tailwind base; */
-/* @tailwind components; */
-/* @tailwind utilities; */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   /* Application de Times New Roman par défaut pour tout le texte */

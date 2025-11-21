@@ -1,9 +1,7 @@
 import React, { useCallback, useState, useRef } from 'react';
 import { Upload, FileText, FileType, X, AlertCircle } from 'lucide-react';
 import { UploadedFile } from '../types';
-
-// Declare mammoth global
-declare var mammoth: any;
+import mammoth from 'mammoth';
 
 interface FileUploadProps {
   files: UploadedFile[];
@@ -49,9 +47,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
               reader.onerror = reject;
           });
         } else if (isWord) {
-           if (typeof mammoth === 'undefined') {
-               throw new Error("La librairie de lecture Word (Mammoth) n'est pas chargée.");
-           }
            // Handle Word (Extract Text with Mammoth)
            const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
               const reader = new FileReader();
