@@ -1,29 +1,22 @@
-# Extracteur de Données Documentaires (PDF & Word)
+# Extracteur de Données Documentaires (Local)
 
-Une application web alimentée par l'IA pour extraire automatiquement des données structurées à partir de documents PDF et Word.
+Une application web sécurisée et rapide pour extraire automatiquement des données structurées à partir de documents PDF et Word, directement dans votre navigateur.
 
 ## Fonctionnalités
 
+- **100% Local** : Aucune donnée ne quitte votre navigateur. Analyse instantanée sans clé API.
 - **Multi-formats** : Support des fichiers `.pdf` et `.docx`.
-- **Extraction Intelligente** : Utilise Google Gemini 2.5 Flash pour analyser le contenu.
-- **Champs Extraits** : Nom, Prénom, Email, Téléphone, Sujet, et une liste exhaustive des Objectifs Spécifiques.
+- **Extraction Automatique** : Utilise des algorithmes de détection (Regex) pour trouver emails, téléphones, noms, etc.
 - **Export PDF** : Génération automatique d'un rapport PDF contenant un tableau individuel pour chaque fichier.
 - **Design** : Interface moderne avec support Drag & Drop, utilisant les polices Montserrat et Times New Roman.
 
 ## Déploiement sur Vercel
 
-Ce projet est configuré pour être déployé facilement sur Vercel.
+Ce projet est optimisé pour un déploiement gratuit sur Vercel.
 
-### Prérequis
-1. Un compte [Google AI Studio](https://aistudio.google.com/) pour obtenir une clé API.
-2. Un compte Vercel.
-
-### Étapes
 1. Importez ce dépôt git dans Vercel.
-2. Dans la configuration du projet ("Environment Variables"), ajoutez :
-   - **Key**: `API_KEY`
-   - **Value**: Votre clé API Gemini (commençant par `AIza...`)
-3. Déployez !
+2. Cliquez sur **Deploy**. 
+3. C'est tout ! Aucune variable d'environnement n'est requise.
 
 ## Installation Locale
 
@@ -36,11 +29,7 @@ Ce projet est configuré pour être déployé facilement sur Vercel.
    ```bash
    npm install
    ```
-3. Créez un fichier `.env` à la racine et ajoutez votre clé :
-   ```env
-   API_KEY=votre_cle_api_ici
-   ```
-4. Lancez l'application :
+3. Lancez l'application :
    ```bash
    npm run dev
    ```
@@ -49,6 +38,7 @@ Ce projet est configuré pour être déployé facilement sur Vercel.
 
 - **Frontend** : React, TypeScript, Vite
 - **UI** : Tailwind CSS, Lucide React
-- **IA** : Google GenAI SDK (Gemini 2.5 Flash)
-- **Traitement de fichiers** : Mammoth.js (Word), FileReader (PDF)
+- **Traitement de fichiers** : 
+  - Mammoth.js (Word)
+  - PDF.js (PDF)
 - **Génération PDF** : jsPDF, jsPDF-AutoTable

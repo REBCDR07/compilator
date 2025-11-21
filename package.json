@@ -1,5 +1,5 @@
 {
-  "name": "pdf-compiler-ai",
+  "name": "pdf-compiler-local",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "latest",
+    "pdfjs-dist": "^3.11.174",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "lucide-react": "^0.344.0",

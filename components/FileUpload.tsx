@@ -2,6 +2,11 @@ import React, { useCallback, useState, useRef } from 'react';
 import { Upload, FileText, FileType, X, AlertCircle } from 'lucide-react';
 import { UploadedFile } from '../types';
 import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configuration robuste du worker. Utilise une version fixe compatible.
+// Cela évite les erreurs si pdfjsLib.version est undefined lors du build.
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 interface FileUploadProps {
   files: UploadedFile[];
@@ -12,6 +17,29 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
   const [isDragActive, setIsDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        // Chargement du document
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+
+        // Extraction page par page
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+                .map((item: any) => item.str)
+                .join(' ');
+            fullText += pageText + '\n\n';
+        }
+        return fullText;
+    } catch (e) {
+        console.error("Erreur PDF.js:", e);
+        throw new Error("Impossible de lire le fichier PDF. Est-il corrompu ou protégé ?");
+    }
+  };
 
   const processFiles = async (fileList: FileList | File[]) => {
     setError(null);
@@ -25,39 +53,26 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
           file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
           lowerName.endsWith('.docx');
 
-      // Validation
       if (!isPdf && !isWord) {
         setError(`Le fichier "${file.name}" n'est pas supporté. Utilisez PDF ou Word (.docx).`);
         continue;
       }
 
       try {
-        let extractedText: string | undefined = undefined;
-        let base64Data = "";
+        let extractedText = "";
+        let base64Data = ""; 
 
         if (isPdf) {
-           // Handle PDF (Base64)
-           base64Data = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(file);
-              reader.onload = () => {
-                  const result = reader.result as string;
-                  resolve(result.split(',')[1]);
-              };
-              reader.onerror = reject;
-          });
+           extractedText = await extractTextFromPdf(file);
         } else if (isWord) {
-           // Handle Word (Extract Text with Mammoth)
-           const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsArrayBuffer(file);
-              reader.onload = () => resolve(reader.result as ArrayBuffer);
-              reader.onerror = reject;
-           });
-
+           const arrayBuffer = await file.arrayBuffer();
            const result = await mammoth.extractRawText({ arrayBuffer });
            extractedText = result.value;
-           base64Data = ""; // Gemini text prompt doesn't use base64
+        }
+
+        // Vérification basique
+        if (!extractedText || extractedText.trim().length < 5) {
+             console.warn(`Peu de texte extrait pour ${file.name}`);
         }
 
         newFiles.push({
@@ -67,12 +82,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
           size: file.size,
           mimeType: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           base64: base64Data,
-          extractedText
+          extractedText: extractedText || ""
         });
 
       } catch (err: any) {
-        console.error("Error reading file", file.name, err);
-        setError(`Erreur lors de la lecture de ${file.name}: ${err.message || 'Erreur inconnue'}`);
+        console.error("Error processing file", file.name, err);
+        setError(`Erreur sur ${file.name}: ${err.message || 'Lecture impossible'}`);
       }
     }
 
@@ -105,7 +120,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
     if (event.target.files && event.target.files.length > 0) {
       await processFiles(event.target.files);
     }
-    // Reset input value to allow selecting the same file again if needed
     event.target.value = '';
   };
 
