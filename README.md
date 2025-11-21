@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Extracteur de Données Documentaires (PDF & Word)
 
-# Run and deploy your AI Studio app
+Cette application permet d'uploader plusieurs documents (PDF ou Word), d'extraire automatiquement les informations clés (Nom, Prénom, Email, Téléphone, Sujet, Objectifs) grâce à l'IA Gemini, et de générer un rapport PDF structuré avec un tableau par fichier.
 
-This contains everything you need to run your app locally.
+## Fonctionnalités
 
-View your app in AI Studio: https://ai.studio/apps/drive/1jOPG0zfyUFWe1Qe_PiLDlgS_Vo-L1IsU
+- **Multi-formats** : Supporte les fichiers `.pdf` et `.docx`.
+- **Extraction IA** : Utilise Google Gemini 2.5 Flash pour une extraction précise et structurée.
+- **Rapport PDF** : Génère un fichier PDF téléchargeable contenant un tableau détaillé pour chaque document analysé.
+- **Interface** : Drag & Drop, design épuré (Police Montserrat & Times New Roman).
 
-## Run Locally
+## Prérequis pour le déploiement (Vercel)
 
-**Prerequisites:**  Node.js
+Ce projet nécessite une clé API Google Gemini.
 
+1. Obtenez une clé sur [Google AI Studio](https://aistudio.google.com/).
+2. Dans les paramètres de votre projet Vercel, ajoutez une variable d'environnement :
+   - **Nom** : `API_KEY`
+   - **Valeur** : `Votre_Clé_API_Gemini`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Installation locale
+
+1. Clonez le dépôt.
+2. Installez les dépendances :
+   ```bash
+   npm install
+   ```
+3. Créez un fichier `.env` à la racine :
+   ```env
+   API_KEY=votre_cle_api_ici
+   ```
+4. Lancez le serveur de développement :
+   ```bash
+   npm run dev
+   ```
+
+## Technologies
+
+- React (Vite)
+- TypeScript
+- Tailwind CSS
+- Google GenAI SDK
+- Mammoth.js (Extraction Word)
+- jsPDF & AutoTable (Génération PDF)

@@ -1,10 +1,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UploadedFile, CompilationResult } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const compileDocuments = async (files: UploadedFile[]): Promise<CompilationResult> => {
   try {
+    // Initialisation sécurisée à l'intérieur de la fonction
+    // Cela évite que l'application plante au démarrage si la clé n'est pas encore chargée
+    const apiKey = process.env.API_KEY;
+    
+    if (!apiKey) {
+      throw new Error("La clé API (API_KEY) est manquante dans les variables d'environnement.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
     // Prepare parts. Mix of inlineData (PDF) and text (Word)
     const contentParts = files.map((file) => {
         if (file.extractedText) {
