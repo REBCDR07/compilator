@@ -41,14 +41,16 @@ const Preview: React.FC<PreviewProps> = ({ result, onBack }) => {
         
         yPosition += 3;
 
+        // Préparation des données Contact fusionnées pour le PDF
+        const contactInfo = `${item.email}\n${item.telephone}`;
+
         // Table for this specific document
         autoTable(doc, {
             startY: yPosition,
             head: [['Information', 'Détails']],
             body: [
                 ['Nom et Prénom', item.nomComplet],
-                ['Email', item.email],
-                ['Téléphone', item.telephone],
+                ['Contact', contactInfo], // Fusion Email et Téléphone
                 ['Sujet', item.sujet],
                 ['Objectif général et spécifiques', item.objectifs]
             ],
@@ -136,12 +138,15 @@ const Preview: React.FC<PreviewProps> = ({ result, onBack }) => {
                       <td className="px-6 py-4 w-3/4 text-sm text-slate-900">{item.nomComplet}</td>
                     </tr>
                     <tr className="group hover:bg-slate-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">Email</td>
-                        <td className="px-6 py-4 text-sm text-indigo-600">{item.email}</td>
-                    </tr>
-                    <tr className="group hover:bg-slate-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">Téléphone</td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{item.telephone}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">Contact</td>
+                        <td className="px-6 py-4 text-sm text-slate-900">
+                            <div className="flex flex-col space-y-1">
+                                {item.email && item.email !== "Non mentionné" && (
+                                    <span className="text-indigo-600 font-medium">{item.email}</span>
+                                )}
+                                <span className="text-slate-700">{item.telephone}</span>
+                            </div>
+                        </td>
                     </tr>
                     <tr className="group hover:bg-slate-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">Sujet</td>
