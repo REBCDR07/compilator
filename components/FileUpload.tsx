@@ -4,8 +4,8 @@ import { UploadedFile } from '../types';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configuration robuste du worker. Utilise une version fixe compatible.
-// Cela évite les erreurs si pdfjsLib.version est undefined lors du build.
+// Configuration du Worker PDF
+// Utilisation explicite de la version compatible avec le package.json
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 interface FileUploadProps {
@@ -21,23 +21,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
   const extractTextFromPdf = async (file: File): Promise<string> => {
     try {
         const arrayBuffer = await file.arrayBuffer();
-        // Chargement du document
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
 
-        // Extraction page par page
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
+            
+            // Important : join('\n') préserve les sauts de ligne pour l'analyseur regex
             const pageText = textContent.items
                 .map((item: any) => item.str)
-                .join(' ');
+                .join('\n');
+            
+            // Ajout d'un séparateur de page
             fullText += pageText + '\n\n';
         }
         return fullText;
-    } catch (e) {
-        console.error("Erreur PDF.js:", e);
-        throw new Error("Impossible de lire le fichier PDF. Est-il corrompu ou protégé ?");
+    } catch (e: any) {
+        console.error("Erreur PDF extract:", e);
+        throw new Error("Impossible de lire le PDF. Vérifiez qu'il n'est pas protégé par mot de passe.");
     }
   };
 
@@ -54,14 +56,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
           lowerName.endsWith('.docx');
 
       if (!isPdf && !isWord) {
-        setError(`Le fichier "${file.name}" n'est pas supporté. Utilisez PDF ou Word (.docx).`);
+        setError(`Type de fichier non supporté: ${file.name}`);
         continue;
       }
 
       try {
         let extractedText = "";
-        let base64Data = ""; 
-
+        
         if (isPdf) {
            extractedText = await extractTextFromPdf(file);
         } else if (isWord) {
@@ -70,24 +71,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
            extractedText = result.value;
         }
 
-        // Vérification basique
-        if (!extractedText || extractedText.trim().length < 5) {
-             console.warn(`Peu de texte extrait pour ${file.name}`);
-        }
-
         newFiles.push({
           id: Math.random().toString(36).substring(7),
           file,
           name: file.name,
           size: file.size,
           mimeType: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          base64: base64Data,
-          extractedText: extractedText || ""
+          base64: "", // Plus nécessaire pour le local regex
+          extractedText: extractedText
         });
 
       } catch (err: any) {
-        console.error("Error processing file", file.name, err);
-        setError(`Erreur sur ${file.name}: ${err.message || 'Lecture impossible'}`);
+        console.error("Erreur lecture fichier:", err);
+        setError(`Erreur lors de la lecture de ${file.name}`);
       }
     }
 
@@ -110,7 +106,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       await processFiles(e.dataTransfer.files);
     }
@@ -164,10 +159,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-700">
-              {isDragActive ? "Déposez les fichiers ici" : "Cliquez ou glissez vos fichiers"}
+              {isDragActive ? "Relâchez pour ajouter" : "Cliquez ou glissez vos fichiers"}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              PDF (.pdf) et Word (.docx) acceptés
+              Supporte PDF et Word (.docx)
             </p>
           </div>
         </div>
@@ -199,7 +194,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
                   removeFile(file.id);
                 }}
                 className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                title="Retirer le fichier"
+                title="Retirer"
               >
                 <X size={18} />
               </button>
