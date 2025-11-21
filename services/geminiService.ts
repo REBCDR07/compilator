@@ -1,3 +1,4 @@
+
 import { UploadedFile, CompilationResult, DocumentAnalysis } from "../types";
 
 // Moteur d'extraction locale robuste basé sur Regex
@@ -12,6 +13,10 @@ const extractDataLocally = (text: string, fileName: string): DocumentAnalysis =>
   const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
   const phoneRegex = /(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}/;
   const subjectRegexLine = /^(?:Objet|Sujet|Concerne)\s*[:\-]?\s*(.+)/i;
+  
+  // Regex pour le NOM basé sur "Synthèse"
+  // Ex: "Synthèse de Jean Dupont", "Synthèse : Jean Dupont", "Synthèse Jean Dupont"
+  const syntheseRegex = /synthèse\s*(?:de|du|:|par)?\s*(.+)/i;
 
   // --- Extraction Métadonnées ---
   
@@ -34,32 +39,39 @@ const extractDataLocally = (text: string, fileName: string): DocumentAnalysis =>
     }
   }
 
-  // --- Extraction NOM / PRÉNOM ---
-  let nom = "Non détecté";
-  let prenom = "";
+  // --- Extraction NOM COMPLET (Après "Synthèse") ---
+  let nomComplet = "Non détecté";
+  let nomLineIndex = -1;
 
-  // On cherche dans les 10 premières lignes
-  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
       const line = lines[i];
-      // On ignore les lignes techniques ou métadonnées pour le nom
-      if (line.includes('@') || phoneRegex.test(line) || i === sujetLineIndex) continue;
-      if (line.toLowerCase().includes('page')) continue;
-      
-      // Candidat probable : ligne courte avec des lettres
-      if (line.length > 2 && line.length < 50 && /[a-zA-Z]/.test(line)) {
-          const parts = line.split(/\s+/);
-          if (parts.length >= 2) {
-              prenom = parts[0];
-              nom = parts.slice(1).join(' ');
-              break;
+      const match = line.match(syntheseRegex);
+      if (match && match[1].trim().length > 0) {
+          nomComplet = match[1].trim();
+          nomLineIndex = i;
+          break;
+      }
+  }
+
+  // Fallback si pas de mot "Synthèse" : on prend le nom de fichier ou on cherche une ligne courte au début
+  if (nomComplet === "Non détecté") {
+      // Essai simple : première ligne qui n'est pas un email/tel/sujet et qui a des lettres
+      for (let i = 0; i < Math.min(lines.length, 5); i++) {
+          const line = lines[i];
+          if (line.includes('@') || phoneRegex.test(line) || i === sujetLineIndex) continue;
+          if (line.length > 3 && /[a-zA-Z]/.test(line)) {
+               // On suppose que c'est le titre/nom si on n'a pas trouvé "Synthèse"
+               // Mais l'utilisateur a demandé explicitement après "Synthèse".
+               // On laisse "Non détecté" ou on met une valeur par défaut safe.
+               break; 
           }
       }
   }
 
-  // --- Extraction OBJECTIFS SPÉCIFIQUES (Contenu Complet) ---
-  // Stratégie : On prend TOUT le texte, et on filtre seulement ce qu'on a déjà identifié comme métadonnée.
-  // Cela évite de couper le début du texte si l'en-tête est mal formaté.
 
+  // --- Extraction OBJECTIFS (Contenu Complet) ---
+  // Stratégie : On prend TOUT le texte, et on filtre seulement ce qu'on a déjà identifié comme métadonnée.
+  
   const contentLines = lines.filter((line, index) => {
       const l = line.trim();
       
@@ -70,8 +82,8 @@ const extractDataLocally = (text: string, fileName: string): DocumentAnalysis =>
       // On retire la ligne exacte du sujet
       if (index === sujetLineIndex) return false;
 
-      // On retire le nom/prénom s'il est sur une ligne isolée au début (index < 10)
-      if (index < 10 && l.includes(nom) && l.includes(prenom)) return false;
+      // On retire la ligne du Nom (Synthèse ...)
+      if (index === nomLineIndex) return false;
 
       // On retire les mots clés "CV" ou "Curriculum Vitae" s'ils sont isolés
       if (/^curriculum vitae$/i.test(l) || /^cv$/i.test(l)) return false;
@@ -82,13 +94,12 @@ const extractDataLocally = (text: string, fileName: string): DocumentAnalysis =>
   let objectifs = contentLines.join('\n');
 
   if (!objectifs || objectifs.length < 5) {
-      objectifs = "Aucun contenu textuel significatif extrait. Le document est peut-être une image.";
+      objectifs = "Aucun contenu textuel significatif extrait.";
   }
 
   return {
     fileName,
-    nom,
-    prenom,
+    nomComplet,
     email,
     telephone,
     sujet,
@@ -104,11 +115,9 @@ export const compileDocuments = async (files: UploadedFile[]): Promise<Compilati
       try {
           // Vérification de sécurité si le texte est vide
           if (!file.extractedText || file.extractedText.trim().length === 0) {
-             // Tentative de fallback : si c'est un nom de fichier parlant, on peut au moins mettre ça
              return {
                  fileName: file.name,
-                 nom: "Inconnu",
-                 prenom: "",
+                 nomComplet: "Inconnu",
                  email: "",
                  telephone: "",
                  sujet: "Contenu vide ou illisible",
@@ -122,8 +131,7 @@ export const compileDocuments = async (files: UploadedFile[]): Promise<Compilati
           console.error("Erreur d'analyse interne:", e);
           return {
               fileName: file.name,
-              nom: "Erreur",
-              prenom: "",
+              nomComplet: "Erreur",
               email: "",
               telephone: "",
               sujet: "Erreur de traitement",

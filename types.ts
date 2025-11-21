@@ -1,3 +1,4 @@
+
 export interface UploadedFile {
   id: string;
   file: File;
@@ -10,12 +11,11 @@ export interface UploadedFile {
 
 export interface DocumentAnalysis {
   fileName: string;
-  nom: string;
-  prenom: string;
+  nomComplet: string; // Merged field for Nom & Prénom
   email: string;
   telephone: string;
   sujet: string;
-  objectifs: string; // Renamed from 'autres' to capture specific objectives fully
+  objectifs: string; // Will be labeled "Objectif général et spécifiques"
 }
 
 export interface CompilationResult {

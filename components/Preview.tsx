@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileDown, ArrowLeft, CheckCircle, User, FileText } from 'lucide-react';
 import { CompilationResult } from '../types';
@@ -45,12 +46,11 @@ const Preview: React.FC<PreviewProps> = ({ result, onBack }) => {
             startY: yPosition,
             head: [['Information', 'Détails']],
             body: [
-                ['Nom', item.nom],
-                ['Prénom', item.prenom],
+                ['Nom et Prénom', item.nomComplet],
                 ['Email', item.email],
                 ['Téléphone', item.telephone],
                 ['Sujet', item.sujet],
-                ['Objectifs Spécifiques', item.objectifs]
+                ['Objectif général et spécifiques', item.objectifs]
             ],
             theme: 'grid',
             styles: {
@@ -69,7 +69,7 @@ const Preview: React.FC<PreviewProps> = ({ result, onBack }) => {
                 lineWidth: 0.1
             },
             columnStyles: {
-                0: { cellWidth: 50, fontStyle: 'bold', textColor: [51, 65, 85] },
+                0: { cellWidth: 60, fontStyle: 'bold', textColor: [51, 65, 85] },
                 1: { cellWidth: 'auto' }
             },
             margin: { left: margin, right: margin }
@@ -132,12 +132,8 @@ const Preview: React.FC<PreviewProps> = ({ result, onBack }) => {
                 <table className="min-w-full divide-y divide-slate-100">
                   <tbody className="bg-white divide-y divide-slate-100">
                     <tr className="group hover:bg-slate-50">
-                      <td className="px-6 py-4 w-1/4 whitespace-nowrap text-sm font-bold text-slate-500">Nom</td>
-                      <td className="px-6 py-4 w-3/4 text-sm text-slate-900">{item.nom}</td>
-                    </tr>
-                    <tr className="group hover:bg-slate-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">Prénom</td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{item.prenom}</td>
+                      <td className="px-6 py-4 w-1/4 whitespace-nowrap text-sm font-bold text-slate-500">Nom et Prénom</td>
+                      <td className="px-6 py-4 w-3/4 text-sm text-slate-900">{item.nomComplet}</td>
                     </tr>
                     <tr className="group hover:bg-slate-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">Email</td>
@@ -152,7 +148,7 @@ const Preview: React.FC<PreviewProps> = ({ result, onBack }) => {
                         <td className="px-6 py-4 text-sm text-slate-900">{item.sujet}</td>
                     </tr>
                     <tr className="group hover:bg-slate-50 bg-slate-50/50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500 align-top">Objectifs Spécifiques</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500 align-top">Objectif général et spécifiques</td>
                         <td className="px-6 py-4 text-sm text-slate-700 whitespace-pre-line leading-relaxed">{item.objectifs}</td>
                     </tr>
                   </tbody>
